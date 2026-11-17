@@ -1,0 +1,275 @@
+<title>Speak with Confidence Words</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: one column "training desk" — week strip, mode switch, then the active drill on a single card surface. */
+:root{
+  --bg:#f3f5f4; --surface:#ffffff; --ink:#18222b; --muted:#5e6b72; --line:#dbe2e0;
+  --teal:#0f6e6e; --teal-soft:#e2f0ee; --coral:#d9573b; --coral-soft:#fbe9e3; --good:#1f7a46; --bad:#b3261e;
+  --display:'Fraunces', Georgia, 'Times New Roman', serif;
+  --body:'Manrope', 'Segoe UI', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1517; --surface:#172124; --ink:#e8efee; --muted:#9aaaa8; --line:#2a3a3c;
+  --teal:#4fb7ad; --teal-soft:#183a38; --coral:#f08165; --coral-soft:#3b2420; --good:#5fcf8e; --bad:#ff8a80; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0f1517; --surface:#172124; --ink:#e8efee; --muted:#9aaaa8; --line:#2a3a3c;
+  --teal:#4fb7ad; --teal-soft:#183a38; --coral:#f08165; --coral-soft:#3b2420; --good:#5fcf8e; --bad:#ff8a80; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header h1{font-family:var(--display);font-size:clamp(26px,5vw,36px);line-height:1.1;margin:0;text-wrap:balance}
+header p{margin:4px 0 0;color:var(--muted)}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:var(--coral)}
+.weeks{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.weeks button{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:600 13px var(--body);cursor:pointer}
+.weeks button[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:var(--surface)}
+.topic{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.topic h2{font-family:var(--display);font-size:22px;margin:0}
+.meter{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{height:6px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--good);width:0;transition:width .3s}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:5px}
+.modes button{border:0;background:transparent;color:var(--muted);border-radius:8px;padding:10px 6px;font:700 14px var(--body);cursor:pointer}
+.modes button small{display:block;font-weight:500;font-size:11px}
+.modes button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;min-height:380px;display:flex;flex-direction:column;gap:14px}
+button:focus-visible{outline:3px solid var(--coral);outline-offset:2px}
+.btn{border:0;border-radius:10px;padding:12px 16px;font:700 15px var(--body);cursor:pointer}
+.btn.primary{background:var(--teal);color:var(--surface)} .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.good{background:var(--good);color:var(--surface)} .btn.warn{background:var(--coral);color:var(--surface)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row .btn{flex:1 1 140px}
+/* flashcard */
+.card{perspective:1200px;cursor:pointer;flex:1}
+.card-inner{position:relative;width:100%;min-height:250px;transition:transform .5s;transform-style:preserve-3d}
+.card.flip .card-inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:18px;text-align:center;border:1px solid var(--line)}
+.front{background:var(--teal-soft)} .back{background:var(--coral-soft);transform:rotateY(180deg)}
+.emoji{font-size:64px;line-height:1;font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif}
+.word{font-family:var(--display);font-size:clamp(28px,6vw,40px);line-height:1.1}
+.ru{font-size:22px;font-weight:700}
+.ex{font-size:16px;color:var(--ink);max-width:46ch}
+.hint{font-size:12px;color:var(--muted)}
+.speak{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:600 13px var(--body);cursor:pointer}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.toolbar label{display:flex;gap:6px;align-items:center;cursor:pointer}
+/* match */
+.hud{display:flex;justify-content:space-between;align-items:center;font-variant-numeric:tabular-nums;font-weight:700}
+.hud .big{font-family:var(--display);font-size:28px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mcol{display:flex;flex-direction:column;gap:8px;min-width:0}
+.tile{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:12px 10px;font:600 15px var(--body);cursor:pointer;min-height:52px;text-align:left;overflow-wrap:anywhere}
+.tile.sel{border-color:var(--teal);background:var(--teal-soft)}
+.tile.done{visibility:hidden}
+.tile.wrong{border-color:var(--bad);animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+/* sprint */
+.q{font-size:20px;font-weight:600;line-height:1.45;text-wrap:balance}
+.q .gap{display:inline-block;min-width:90px;border-bottom:3px solid var(--coral);margin:0 4px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:14px 10px;font:700 16px var(--body);cursor:pointer;overflow-wrap:anywhere}
+.opt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 16%,var(--surface))}
+.opt.wrongp{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--surface))}
+.timer{height:8px;background:var(--line);border-radius:8px;overflow:hidden}
+.timer i{display:block;height:100%;background:var(--coral);width:100%}
+.result{text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;flex:1}
+.result .score{font-family:var(--display);font-size:56px;line-height:1}
+.missed{width:100%;text-align:left;border-top:1px solid var(--line);padding-top:10px;font-size:14px}
+.missed li{margin:3px 0}
+.pill{display:inline-block;background:var(--teal-soft);color:var(--teal);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700}
+footer{font-size:12px;color:var(--muted);text-align:center}
+@media (max-width:480px){ .stage{padding:14px} .opts{grid-template-columns:1fr} .emoji{font-size:54px} }
+@media (prefers-reduced-motion: reduce){ .card-inner{transition:none} .tile.wrong{animation:none} }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Speak with Confidence · 12-week programme</div>
+    <h1>Word Trainer</h1>
+    <p>Learn this week's 16 words, then test yourself with Match Rush and Sentence Sprint. Ten minutes a day is enough.</p>
+  </header>
+
+  <nav class="weeks" id="weeks" aria-label="Choose a week"></nav>
+
+  <div>
+    <div class="topic"><h2 id="topic"></h2><span class="meter" id="meter"></span></div>
+    <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+  </div>
+
+  <div class="modes" role="group" aria-label="Choose an activity">
+    <button id="m-cards" aria-pressed="true">Flashcards<small>learn the words</small></button>
+    <button id="m-match" aria-pressed="false">Match Rush<small>English ↔ Turkish</small></button>
+    <button id="m-sprint" aria-pressed="false">Sentence Sprint<small>60 seconds</small></button>
+  </div>
+
+  <main class="stage" id="stage" aria-live="polite"></main>
+  <footer>Your progress and best scores are saved on this device.</footer>
+</div>
+
+<script>
+const DATA = [{"week":1,"topic":"Me and My Work","words":[{"w":"teacher / tutor","e":"👩‍🏫","x":"I am a Russian teacher. I also work as a private tutor.","ru":"öğretmen / özel ders öğretmeni"},{"w":"translator","e":"📝🌍","x":"A translator changes a text from one language into another.","ru":"çevirmen"},{"w":"native speaker","e":"🗣️🇷🇺","x":"I am a native speaker of Russian.","ru":"anadili konuşan kişi"},{"w":"language","e":"🔤","x":"Russian is a beautiful but difficult language.","ru":"dil"},{"w":"subject","e":"📚","x":"My subject is Russian language and literature.","ru":"ders, konu"},{"w":"lesson","e":"🧑‍💻📖","x":"My lessons are fifty minutes long.","ru":"ders"},{"w":"beginner","e":"🌱","x":"Most of my students are beginners.","ru":"başlangıç seviyesi"},{"w":"advanced","e":"🏔️","x":"Advanced students read Russian books.","ru":"ileri seviye"},{"w":"grammar","e":"🧩","x":"Russian grammar has six cases.","ru":"dil bilgisi"},{"w":"pronunciation","e":"👄","x":"My pronunciation in English is getting better.","ru":"telaffuz"},{"w":"experience","e":"⏳🏅","x":"I have ten years of teaching experience.","ru":"deneyim"},{"w":"qualification","e":"🎓📜","x":"I have a university qualification in teaching.","ru":"yeterlilik, diploma"},{"w":"fluent","e":"💬✨","x":"I want to be fluent in English.","ru":"akıcı"},{"w":"online","e":"💻🌐","x":"I teach online from home.","ru":"çevrim içi, online"},{"w":"student","e":"🧑‍🎓","x":"My students live in different countries.","ru":"öğrenci"},{"w":"hobby","e":"🎨📚","x":"My hobby is reading. I also like swimming.","ru":"hobi"}]},{"week":2,"topic":"My Week and My Timetable","words":[{"w":"usually","e":"🔁","x":"I usually start work at nine.","ru":"genellikle"},{"w":"often","e":"🔂","x":"I often teach five lessons a day.","ru":"sık sık"},{"w":"sometimes","e":"🎲","x":"I sometimes teach on Saturday morning.","ru":"bazen"},{"w":"rarely","e":"🐢","x":"My students rarely cancel lessons.","ru":"nadiren"},{"w":"never","e":"🚫","x":"I never work on Sundays.","ru":"asla, hiç"},{"w":"get up","e":"⏰🛏️","x":"I get up at half past six.","ru":"kalkmak"},{"w":"prepare","e":"🗂️✏️","x":"I prepare my lessons in the evening.","ru":"hazırlamak"},{"w":"check emails","e":"📧✅","x":"I check my emails three times a day.","ru":"e-postaları kontrol etmek"},{"w":"book a lesson","e":"📅✍️","x":"You can book a lesson on my website.","ru":"ders ayarlamak, rezervasyon yapmak"},{"w":"available","e":"🟢","x":"I’m available on Tuesday at ten.","ru":"müsait"},{"w":"busy","e":"🔴🏃‍♀️","x":"I’m very busy on Mondays.","ru":"meşgul"},{"w":"free time","e":"🧘‍♀️☕","x":"In my free time I read and walk.","ru":"boş zaman"},{"w":"weekday","e":"🗓️ Mon–Fri","x":"On weekdays I teach online.","ru":"hafta içi"},{"w":"timetable","e":"🗒️⏱️","x":"My timetable is full on Wednesday.","ru":"ders programı"},{"w":"appointment","e":"🩺📌","x":"I have a dentist appointment at two.","ru":"randevu"},{"w":"reschedule","e":"🔄📅","x":"Can we reschedule the lesson to Friday?","ru":"ertelemek, saatini değiştirmek"}]},{"week":3,"topic":"Where I Live","words":[{"w":"city centre","e":"🏙️","x":"My flat is ten minutes from the city centre.","ru":"şehir merkezi"},{"w":"neighbourhood","e":"🏘️","x":"I live in a quiet neighbourhood.","ru":"mahalle"},{"w":"flat","e":"🏢🔑","x":"My flat is on the fourth floor.","ru":"daire"},{"w":"near","e":"📍↔️","x":"There is a park near my home.","ru":"yakın"},{"w":"next to","e":"🏠🏪","x":"The café is next to my building.","ru":"yanında"},{"w":"opposite","e":"🏦 ⇆ 💊","x":"The bank is opposite the pharmacy.","ru":"karşısında"},{"w":"between","e":"🏪🏠🏪","x":"My school is between a bank and a café.","ru":"arasında"},{"w":"crowded","e":"👥👥👥","x":"The market is crowded on Saturdays.","ru":"kalabalık"},{"w":"quiet","e":"🤫🌳","x":"My street is very quiet at night.","ru":"sessiz, sakin"},{"w":"cheap","e":"🪙👍","x":"Fruit is cheap at the market.","ru":"ucuz"},{"w":"expensive","e":"💎💰","x":"Restaurants in the centre are expensive.","ru":"pahalı"},{"w":"museum","e":"🏛️","x":"There are two museums in the centre.","ru":"müze"},{"w":"market","e":"🧺🍎","x":"I buy vegetables at the market.","ru":"pazar"},{"w":"public transport","e":"🚌🚇","x":"Public transport in my city is cheap.","ru":"toplu taşıma"},{"w":"beach","e":"🏖️","x":"In summer we go to the beach.","ru":"plaj"},{"w":"mountains","e":"🏔️","x":"In winter you can ski in the mountains.","ru":"dağlar"}]},{"week":4,"topic":"Right Now: The Online Classroom","words":[{"w":"explain","e":"👩‍🏫💬","x":"I explain the grammar in a simple way.","ru":"açıklamak"},{"w":"repeat","e":"🔁","x":"Can you repeat that, please?","ru":"tekrarlamak"},{"w":"practise","e":"🏋️‍♀️📖","x":"We practise speaking in every lesson.","ru":"pratik yapmak"},{"w":"correct","e":"✅✏️","x":"I correct my students’ homework every evening.","ru":"düzeltmek"},{"w":"mistake","e":"❌","x":"Don’t worry, everybody makes mistakes.","ru":"hata"},{"w":"homework","e":"📚🏠","x":"Your homework is to learn ten new words.","ru":"ödev"},{"w":"exercise","e":"📝","x":"Let’s do exercise 3 together.","ru":"alıştırma"},{"w":"pronounce","e":"👄🔊","x":"How do you pronounce this word?","ru":"telaffuz etmek"},{"w":"spell","e":"🔤","x":"Can you spell your name, please?","ru":"harf harf söylemek"},{"w":"screen share","e":"🖥️➡️","x":"I’m sharing my screen now. Can you see it?","ru":"ekran paylaşımı"},{"w":"camera","e":"📷","x":"Please turn on your camera.","ru":"kamera"},{"w":"microphone","e":"🎙️","x":"My microphone isn’t working.","ru":"mikrofon"},{"w":"connection","e":"📶","x":"Your connection is bad today.","ru":"bağlantı"},{"w":"mute","e":"🔇","x":"Sorry, you’re on mute.","ru":"sesi kapatmak"},{"w":"freeze","e":"🥶🖥️","x":"Your screen froze for a moment.","ru":"donmak (ekran)"},{"w":"link","e":"🔗","x":"I’m sending you the link in the chat.","ru":"bağlantı, link"}]},{"week":5,"topic":"My Story","words":[{"w":"was born","e":"👶🏥","x":"I was born in a small town near the Volga.","ru":"doğdu"},{"w":"grew up","e":"🧒➡️🧑","x":"I grew up with my grandparents.","ru":"büyüdü"},{"w":"moved","e":"🚚🏠","x":"We moved to a big city five years ago.","ru":"taşındı"},{"w":"studied","e":"📚🎓","x":"I studied languages at university.","ru":"okudu, çalıştı"},{"w":"graduated","e":"🎓🎉","x":"She graduated in 2008.","ru":"mezun oldu"},{"w":"degree","e":"📜","x":"I have a degree in Russian literature.","ru":"diploma, derece"},{"w":"university","e":"🏛️","x":"My university was in the city centre.","ru":"üniversite"},{"w":"first job","e":"💼1️⃣","x":"My first job was at a language school.","ru":"ilk iş"},{"w":"became","e":"🦋","x":"I became a teacher in 2010.","ru":"oldu (…oldu)"},{"w":"decided","e":"🤔➡️✅","x":"I decided to teach online.","ru":"karar verdi"},{"w":"chose","e":"👉","x":"I chose this job because I love languages.","ru":"seçti"},{"w":"career","e":"📈💼","x":"Teaching is a wonderful career.","ru":"kariyer"},{"w":"remember","e":"🧠💭","x":"I remember my first lesson very well.","ru":"hatırlamak"},{"w":"childhood","e":"🧸","x":"I had a happy childhood.","ru":"çocukluk"},{"w":"ago","e":"⏪","x":"I started teaching fifteen years ago.","ru":"önce"},{"w":"change","e":"🔄","x":"Online teaching changed my life.","ru":"değişmek; değişiklik"}]},{"week":6,"topic":"Travel and Stories","words":[{"w":"trip","e":"🧳✈️","x":"Last summer I went on a trip to Istanbul.","ru":"gezi"},{"w":"journey","e":"🚆🛣️","x":"The journey took ten hours by train.","ru":"yolculuk"},{"w":"flight","e":"✈️","x":"Our flight was at six in the morning.","ru":"uçuş"},{"w":"delay","e":"⏰😩","x":"There was a three-hour delay.","ru":"gecikme"},{"w":"luggage","e":"🧳","x":"I always take too much luggage.","ru":"bagaj"},{"w":"lost","e":"❓🧳","x":"The airline lost my bag.","ru":"kayıp"},{"w":"suddenly","e":"⚡","x":"Suddenly the lights went out.","ru":"aniden"},{"w":"while","e":"⏳","x":"While I was waiting, I read a book.","ru":"-iken"},{"w":"booked","e":"📅✅","x":"I booked the hotel online.","ru":"rezervasyon yaptı"},{"w":"sightseeing","e":"🏰📸","x":"We went sightseeing in the old town.","ru":"gezip görme"},{"w":"amazing","e":"🤩","x":"The view was amazing.","ru":"harika"},{"w":"terrible","e":"😖","x":"The food on the plane was terrible.","ru":"berbat, korkunç"},{"w":"happened","e":"💥❓","x":"What happened on your trip?","ru":"oldu, gerçekleşti"},{"w":"guide","e":"🧑‍✈️🗺️","x":"Our guide spoke excellent English.","ru":"rehber"},{"w":"souvenir","e":"🎁🗿","x":"I bought a souvenir for my mother.","ru":"hediyelik eşya"},{"w":"in the end","e":"🏁","x":"In the end, it was a wonderful trip.","ru":"sonunda"}]},{"week":7,"topic":"Experience and Skills","words":[{"w":"experience","e":"🗂️","x":"I have twelve years of teaching experience.","ru":"deneyim"},{"w":"skill","e":"🛠️","x":"Explaining grammar simply is my best skill.","ru":"beceri"},{"w":"achievement","e":"🏆","x":"My biggest achievement is my students’ exam results.","ru":"başarı"},{"w":"course","e":"📚","x":"I’ve done a course in online teaching.","ru":"kurs"},{"w":"certificate","e":"📜","x":"I have a certificate in teaching Russian as a foreign language.","ru":"sertifika"},{"w":"so far","e":"📈","x":"So far I’ve taught students from nine countries.","ru":"şimdiye kadar"},{"w":"results","e":"✅","x":"My students get good results in the TORFL exam.","ru":"sonuçlar"},{"w":"improve","e":"⬆️","x":"My English has improved a lot this month.","ru":"geliştirmek, gelişmek"},{"w":"patient","e":"🧘","x":"A good teacher is patient with beginners.","ru":"sabırlı"},{"w":"organised","e":"🗓️","x":"I’m very organised: I plan every lesson the day before.","ru":"düzenli"},{"w":"creative","e":"🎨","x":"I’m creative: I use songs and games in my lessons.","ru":"yaratıcı"},{"w":"reliable","e":"🤝","x":"I’m reliable: I have never missed a lesson.","ru":"güvenilir"},{"w":"recommend","e":"👍","x":"My students often recommend me to their friends.","ru":"tavsiye etmek"},{"w":"strength","e":"💪","x":"My biggest strength is patience.","ru":"güçlü yön"},{"w":"weakness","e":"🪫","x":"My weakness is that I sometimes work too much.","ru":"zayıf yön"},{"w":"interview","e":"🎤","x":"I have a job interview with an online school on Friday.","ru":"iş görüşmesi, mülakat"}]},{"week":8,"topic":"Plans and Goals","words":[{"w":"plan","e":"📝","x":"My plan is to find ten new students this year.","ru":"plan; planlamak"},{"w":"goal","e":"🎯","x":"My goal is to teach Russian full-time online.","ru":"hedef"},{"w":"aim","e":"🏹","x":"The aim of the first lesson is to speak from minute one.","ru":"amaç"},{"w":"advertise","e":"📢","x":"I’m going to advertise my lessons on Instagram.","ru":"reklam yapmak"},{"w":"attract","e":"🧲","x":"Short videos attract new students.","ru":"çekmek"},{"w":"platform","e":"💻","x":"I teach on two platforms: Preply and italki.","ru":"platform"},{"w":"profile","e":"🪪","x":"I’m going to update my tutor profile with a new photo.","ru":"profil"},{"w":"price","e":"🏷️","x":"The price of one lesson is 20 dollars.","ru":"fiyat"},{"w":"package","e":"📦","x":"A package of ten lessons is cheaper.","ru":"paket"},{"w":"discount","e":"💸","x":"I’ll give you a ten percent discount.","ru":"indirim"},{"w":"grow","e":"🌱","x":"I want my business to grow slowly and safely.","ru":"büyümek, büyütmek"},{"w":"business","e":"💼","x":"Teaching online is a real business.","ru":"iş, işletme"},{"w":"customer","e":"🧑‍💼","x":"My students are also my customers.","ru":"müşteri"},{"w":"review","e":"⭐","x":"Good reviews bring new students.","ru":"yorum, değerlendirme"},{"w":"social media","e":"📱","x":"I post on social media twice a week.","ru":"sosyal medya"},{"w":"launch","e":"🚀","x":"I’m going to launch my website in March.","ru":"başlatmak, piyasaya sürmek"}]},{"week":9,"topic":"Learning Languages: Advice and Rules","words":[{"w":"memorise","e":"🧠","x":"I memorise ten new words every day.","ru":"ezberlemek"},{"w":"revise","e":"🔁","x":"Revise the words from last week before the lesson.","ru":"tekrar etmek (konu)"},{"w":"motivation","e":"🔥","x":"Good results give students motivation.","ru":"motivasyon"},{"w":"confident","e":"😎","x":"I feel more confident when I speak English now.","ru":"kendinden emin"},{"w":"accent","e":"🗣️","x":"Don’t worry about your accent; people understand you.","ru":"aksan"},{"w":"practise","e":"🏋️","x":"You should practise speaking every day.","ru":"pratik yapmak"},{"w":"regularly","e":"📅","x":"Students who study regularly make fast progress.","ru":"düzenli olarak"},{"w":"effective","e":"⚡","x":"Shadowing is a very effective method.","ru":"etkili"},{"w":"method","e":"🧩","x":"My method is: speak first, grammar second.","ru":"yöntem"},{"w":"tip","e":"💡","x":"Here’s a tip: label things in your flat in Russian.","ru":"ipucu"},{"w":"avoid","e":"🚫","x":"Avoid translating every word.","ru":"kaçınmak"},{"w":"focus on","e":"🔍","x":"Focus on the main idea, not every word.","ru":"odaklanmak"},{"w":"progress","e":"📈","x":"You have made great progress this month.","ru":"ilerleme"},{"w":"mistake","e":"❌","x":"Everyone makes mistakes. That’s how we learn.","ru":"hata"},{"w":"habit","e":"🔄","x":"Reading ten minutes a day is a good habit.","ru":"alışkanlık"},{"w":"goal","e":"🎯","x":"Set a small goal for every week.","ru":"hedef"}]},{"week":10,"topic":"Comparing and Choosing","words":[{"w":"flexible","e":"🤸","x":"Online lessons are flexible: you choose the time.","ru":"esnek"},{"w":"convenient","e":"🛋️","x":"Lessons at home are very convenient for busy parents.","ru":"uygun, pratik"},{"w":"quality","e":"⭐","x":"I care about the quality of every lesson.","ru":"kalite"},{"w":"value","e":"💎","x":"My 10-lesson package is good value for money.","ru":"değer"},{"w":"affordable","e":"👛","x":"Group lessons are more affordable than private lessons.","ru":"uygun fiyatlı"},{"w":"option","e":"🔀","x":"There are three options: trial, 5 lessons or 10 lessons.","ru":"seçenek"},{"w":"advantage","e":"👍","x":"One advantage of online lessons is that you don’t travel.","ru":"avantaj"},{"w":"disadvantage","e":"👎","x":"A disadvantage of group lessons is that you speak less.","ru":"dezavantaj"},{"w":"compare","e":"⚖️","x":"Students often compare prices before they book.","ru":"karşılaştırmak"},{"w":"choose","e":"👉","x":"You can choose the topics for your lessons.","ru":"seçmek"},{"w":"trial lesson","e":"🎟️","x":"The trial lesson is 30 minutes and costs half price.","ru":"deneme dersi"},{"w":"group lesson","e":"👥","x":"My group lessons have four students.","ru":"grup dersi"},{"w":"private lesson","e":"👤","x":"In a private lesson I focus only on you.","ru":"özel ders"},{"w":"offer","e":"🏷️","x":"This month I have a special offer: 10% off.","ru":"teklif; teklif etmek"},{"w":"benefit","e":"🎁","x":"The main benefit of my course is speaking practice.","ru":"fayda"},{"w":"worth it","e":"✅","x":"It’s more expensive, but it’s worth it.","ru":"değer, buna değer"}]},{"week":11,"topic":"Talking to Clients (Lessons & Translation)","words":[{"w":"enquiry","e":"❓","x":"I got an enquiry from a new client today.","ru":"bilgi talebi"},{"w":"confirm","e":"✔️","x":"Could you confirm the time of the lesson?","ru":"onaylamak"},{"w":"cancel","e":"❌","x":"Please cancel at least 24 hours before the lesson.","ru":"iptal etmek"},{"w":"refund","e":"💸","x":"If I cancel, I give you a full refund.","ru":"para iadesi"},{"w":"invoice","e":"🧾","x":"I’ll send you the invoice today.","ru":"fatura"},{"w":"payment","e":"💳","x":"Payment is by bank transfer or card.","ru":"ödeme"},{"w":"deadline","e":"⏰","x":"The deadline for the translation is Thursday.","ru":"son teslim tarihi"},{"w":"translate","e":"🔁","x":"I translate documents from Russian into English.","ru":"çevirmek"},{"w":"document","e":"📄","x":"Could you send me the document as a PDF?","ru":"belge"},{"w":"proofread","e":"🔍","x":"I always proofread a translation twice.","ru":"redaksiyon yapmak"},{"w":"quote","e":"💬","x":"I’ll give you a quote when I see the text.","ru":"fiyat teklifi"},{"w":"rate","e":"💶","x":"My rate is eight cents per word.","ru":"ücret"},{"w":"per word","e":"🔤","x":"Translators often charge per word.","ru":"kelime başına"},{"w":"urgent","e":"🚨","x":"Urgent translations cost 30% more.","ru":"acil"},{"w":"feedback","e":"🗣️","x":"I give feedback after every lesson.","ru":"geri bildirim"},{"w":"attach","e":"📎","x":"Please attach the file to your email.","ru":"eklemek (dosya)"}]},{"week":12,"topic":"My Future in English","words":[{"w":"opportunity","e":"🚪","x":"English gives me more opportunities to find students.","ru":"fırsat"},{"w":"unless","e":"🚫","x":"I won’t raise my prices unless I have a waiting list.","ru":"-medikçe, eğer … değilse"},{"w":"as soon as","e":"⚡","x":"I’ll call you as soon as I receive the document.","ru":"-ir -mez"},{"w":"succeed","e":"🏆","x":"If you practise every day, you will succeed.","ru":"başarılı olmak"},{"w":"career","e":"📈","x":"I want to build an international career.","ru":"kariyer"},{"w":"interpreter","e":"🎧","x":"An interpreter translates speech, not documents.","ru":"tercüman (sözlü)"},{"w":"freelance","e":"🧑‍💻","x":"I work freelance, so I choose my clients.","ru":"serbest çalışan"},{"w":"international","e":"🌍","x":"My students are international: from five countries.","ru":"uluslararası"},{"w":"network","e":"🕸️","x":"I want to network with other teachers online.","ru":"bağlantı ağı, çevre"},{"w":"confidence","e":"💪","x":"My confidence in English has grown a lot.","ru":"özgüven"},{"w":"achieve","e":"🎯","x":"I achieved my goal: I can teach in English.","ru":"başarmak"},{"w":"challenge","e":"🧗","x":"Speaking on the phone was a big challenge for me.","ru":"zorluk"},{"w":"proud","e":"😊","x":"I am proud of my progress.","ru":"gururlu"},{"w":"celebrate","e":"🎉","x":"Let’s celebrate the end of the course!","ru":"kutlamak"},{"w":"fluent","e":"🌊","x":"If I continue, I will be fluent next year.","ru":"akıcı"},{"w":"next step","e":"👣","x":"My next step is to open my own website.","ru":"sonraki adım"}]}];
+const $ = s => document.querySelector(s);
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+let known = new Set(store.get('wt-known', []));
+let best = store.get('wt-best', {});
+let week = store.get('wt-week', 1);
+let mode = 'cards';
+let timers = [];
+const clearTimers = () => { timers.forEach(t => clearInterval(t)); timers = []; };
+const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const key = (w) => w.wk + '|' + w.w;
+
+function words(){
+  if (week === 'all') return DATA.flatMap(d => d.words.map(w => ({...w, wk:d.week})));
+  const d = DATA[week-1]; return d.words.map(w => ({...w, wk:d.week}));
+}
+function speak(text){
+  try{ const u = new SpeechSynthesisUtterance(text.replace(' / ', ', ')); u.lang='en-GB'; u.rate=.9;
+    speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){}
+}
+function saveKnown(){ store.set('wt-known', [...known]); updateMeter(); }
+
+function renderWeeks(){
+  const nav = $('#weeks'); nav.innerHTML='';
+  const mk = (label, val) => { const b=document.createElement('button'); b.textContent=label; b.setAttribute('aria-pressed', String(week===val));
+    b.onclick=()=>{ week=val; store.set('wt-week', val); renderWeeks(); render(); }; nav.appendChild(b); };
+  DATA.forEach(d => mk('Week '+d.week, d.week)); mk('All weeks', 'all');
+}
+function updateMeter(){
+  const ws = words(); const k = ws.filter(w => known.has(key(w))).length;
+  $('#topic').textContent = week==='all' ? 'All 192 words' : DATA[week-1].topic;
+  $('#meter').textContent = k + ' / ' + ws.length + ' words known';
+  $('#bar').style.width = (100*k/ws.length) + '%';
+}
+function setMode(m){ mode=m; ['cards','match','sprint'].forEach(x => $('#m-'+x).setAttribute('aria-pressed', String(x===m))); render(); }
+$('#m-cards').onclick=()=>setMode('cards'); $('#m-match').onclick=()=>setMode('match'); $('#m-sprint').onclick=()=>setMode('sprint');
+
+function render(){ clearTimers(); updateMeter(); ({cards:renderCards, match:renderMatch, sprint:renderSprint})[mode](); }
+
+/* ---------- Flashcards ---------- */
+let deck=[], idx=0, ruFirst=store.get('wt-trfirst', false), onlyLearning=false;
+function renderCards(){
+  let ws = words(); if (onlyLearning) ws = ws.filter(w => !known.has(key(w)));
+  deck = shuffle(ws); idx = 0; showCard();
+}
+function showCard(){
+  const st = $('#stage');
+  if (!deck.length || idx >= deck.length){
+    const left = words().filter(w => !known.has(key(w))).length;
+    st.innerHTML = `<div class="result"><span class="pill">Deck finished</span>
+      <div class="score">${words().length-left}<span style="font-size:24px"> / ${words().length}</span></div>
+      <div>${left ? left+' words still to learn.' : 'You know every word. Try Sentence Sprint!'}</div>
+      <div class="row" style="width:100%">
+        ${left ? '<button class="btn warn" id="again-l">Practise the words I’m still learning</button>' : ''}
+        <button class="btn ghost" id="again-a">Go through all the cards again</button></div></div>`;
+    const l=$('#again-l'); if(l) l.onclick=()=>{ onlyLearning=true; renderCards(); };
+    $('#again-a').onclick=()=>{ onlyLearning=false; renderCards(); };
+    return;
+  }
+  const w = deck[idx];
+  const frontMain = ruFirst ? `<div class="ru">${w.ru}</div>` : `<div class="emoji">${w.e}</div><div class="word">${w.w}</div>`;
+  const backMain = ruFirst ? `<div class="emoji">${w.e}</div><div class="word">${w.w}</div><div class="ex">${w.x}</div>`
+                           : `<div class="ru">${w.ru}</div><div class="ex">${w.x}</div>`;
+  st.innerHTML = `
+    <div class="toolbar"><span>Card ${idx+1} of ${deck.length}${onlyLearning?' · still learning':''}</span>
+      <label><input type="checkbox" id="rufirst" ${ruFirst?'checked':''}> Show Turkish first</label></div>
+    <div class="card" id="card" role="button" tabindex="0" aria-label="Flip the card">
+      <div class="card-inner">
+        <div class="face front">${frontMain}<span class="hint">Say it out loud, then tap to check</span></div>
+        <div class="face back">${backMain}<button class="speak" id="say">🔊 Listen</button></div>
+      </div></div>
+    <div class="row"><button class="btn warn" id="no">Still learning</button><button class="btn good" id="yes">I know it</button></div>`;
+  const card = $('#card'); const flip = () => card.classList.toggle('flip');
+  card.onclick = e => { if (e.target.id !== 'say') flip(); };
+  card.onkeydown = e => { if (e.key===' '||e.key==='Enter'){ e.preventDefault(); flip(); } };
+  $('#say').onclick = e => { e.stopPropagation(); speak(w.w + '. ' + w.x); };
+  $('#rufirst').onchange = e => { ruFirst = e.target.checked; store.set('wt-trfirst', ruFirst); showCard(); };
+  $('#yes').onclick = () => { known.add(key(w)); saveKnown(); idx++; showCard(); };
+  $('#no').onclick = () => { known.delete(key(w)); saveKnown(); deck.push(w); idx++; if (deck.length > words().length*3) deck.length = idx; showCard(); };
+}
+
+/* ---------- Match Rush ---------- */
+function renderMatch(){
+  const st = $('#stage'); const set = shuffle(words()).slice(0, 6);
+  const bkey = 'match-' + week; let left = set.length, t0 = Date.now(), penalty = 0, sel = null;
+  st.innerHTML = `<div class="hud"><span>Match the English to the Turkish</span><span class="big" id="clock">0.0s</span></div>
+    <div class="mgrid"><div class="mcol" id="colA"></div><div class="mcol" id="colB"></div></div>
+    <div class="hint">Wrong match = +2 seconds. ${best[bkey] ? 'Your best: ' + best[bkey].toFixed(1) + 's' : 'Set your first record!'}</div>`;
+  const mk = (txt, id, side) => { const b=document.createElement('button'); b.className='tile'; b.textContent=txt; b.dataset.id=id; b.dataset.side=side; return b; };
+  shuffle(set.map((w,i)=>[w.w,i])).forEach(([t,i]) => $('#colA').appendChild(mk(t,i,'A')));
+  shuffle(set.map((w,i)=>[w.ru,i])).forEach(([t,i]) => $('#colB').appendChild(mk(t,i,'B')));
+  const clock = setInterval(() => { const c=$('#clock'); if(c) c.textContent = ((Date.now()-t0)/1000 + penalty).toFixed(1)+'s'; }, 100);
+  timers.push(clock);
+  st.querySelectorAll('.tile').forEach(b => b.onclick = () => {
+    if (b.classList.contains('done')) return;
+    if (!sel || sel.dataset.side === b.dataset.side){ st.querySelectorAll('.tile.sel').forEach(x=>x.classList.remove('sel')); sel=b; b.classList.add('sel'); return; }
+    if (sel.dataset.id === b.dataset.id){
+      [sel,b].forEach(x=>{ x.classList.remove('sel'); x.classList.add('done'); }); speak(set[+b.dataset.id].w); sel=null; left--;
+      if (!left){ clearTimers(); const t = (Date.now()-t0)/1000 + penalty; const rec = !best[bkey] || t < best[bkey];
+        if (rec){ best[bkey]=t; store.set('wt-best', best); }
+        setTimeout(() => { st.innerHTML = `<div class="result"><span class="pill">${rec?'New personal best':'Round complete'}</span>
+          <div class="score">${t.toFixed(1)}s</div><div>Best: ${best[bkey].toFixed(1)}s</div>
+          <div class="row" style="width:100%"><button class="btn primary" id="again">Play another round</button></div></div>`;
+          $('#again').onclick = renderMatch; }, 300); }
+    } else { penalty += 2; [sel,b].forEach(x=>{ x.classList.add('wrong'); setTimeout(()=>x.classList.remove('wrong','sel'),400); }); sel=null; }
+  });
+}
+
+/* ---------- Sentence Sprint ---------- */
+function makeQ(w, pool){
+  const m = w.x.match(new RegExp(w.w.split(' / ')[0].replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'i'));
+  const others = shuffle(pool.filter(o => o.w !== w.w)).slice(0,3);
+  const opts = shuffle([w, ...others]);
+  if (m){ const s = w.x.slice(0, m.index), e = w.x.slice(m.index + m[0].length);
+    return { html: `${s}<span class="gap"></span>${e}`, opts, ans: w, label: 'Choose the missing word' }; }
+  return { html: `Which word means <b>«${w.ru}»</b>?`, opts, ans: w, label: 'Choose the English word' };
+}
+function renderSprint(){
+  const st = $('#stage'); const bkey = 'sprint-' + week;
+  st.innerHTML = `<div class="result"><span class="pill">Sentence Sprint</span>
+    <div style="max-width:44ch">You have 60 seconds. Choose the right word for each sentence. Correct answers in a row give you bonus points.</div>
+    <div>${best[bkey] ? 'Your best: <b>' + best[bkey] + '</b> points' : 'No record yet.'}</div>
+    <button class="btn primary" id="go">Start</button></div>`;
+  $('#go').onclick = playSprint;
+}
+function playSprint(){
+  const st = $('#stage'); const pool = words(); const bkey = 'sprint-' + week;
+  let score=0, streak=0, end=Date.now()+60000, bag=shuffle(pool), missed=[], lock=false;
+  st.innerHTML = `<div class="hud"><span>Score <span class="big" id="sc">0</span></span><span id="stk"></span><span id="sec">60s</span></div>
+    <div class="timer"><i id="tbar"></i></div><div class="hint" id="lbl"></div><div class="q" id="q"></div><div class="opts" id="opts"></div>`;
+  const tick = setInterval(() => { const ms = end-Date.now();
+    if (ms <= 0){ finish(); return; } $('#sec').textContent = Math.ceil(ms/1000)+'s'; $('#tbar').style.width = (ms/600)+'%'; }, 100);
+  timers.push(tick);
+  function next(){
+    if (!bag.length) bag = shuffle(pool);
+    const q = makeQ(bag.pop(), pool); lock=false;
+    $('#lbl').textContent = q.label; $('#q').innerHTML = q.html; const box = $('#opts'); box.innerHTML='';
+    q.opts.forEach(o => { const b=document.createElement('button'); b.className='opt'; b.textContent=o.w;
+      b.onclick=()=>{ if(lock) return; lock=true;
+        if (o.w===q.ans.w){ streak++; score += 10 + (streak>=3 ? (streak-2)*2 : 0); b.classList.add('right'); known.add(key(q.ans)); saveKnown(); setTimeout(next, 350); }
+        else { streak=0; b.classList.add('wrongp'); missed.push(q.ans);
+          box.querySelectorAll('.opt').forEach(x=>{ if(x.textContent===q.ans.w) x.classList.add('right'); }); setTimeout(next, 1100); }
+        $('#sc').textContent=score; $('#stk').textContent = streak>=3 ? '🔥 ' + streak + ' in a row' : ''; };
+      box.appendChild(b); });
+  }
+  function finish(){
+    clearTimers(); const rec = !best[bkey] || score > best[bkey]; if (rec){ best[bkey]=score; store.set('wt-best', best); }
+    const uniq = [...new Map(missed.map(w=>[w.w,w])).values()];
+    st.innerHTML = `<div class="result"><span class="pill">${rec?'New personal best':'Time’s up'}</span>
+      <div class="score">${score}</div><div>Best: ${best[bkey]} points</div>
+      ${uniq.length ? `<div class="missed"><b>Review these words:</b><ul>${uniq.map(w=>`<li><b>${w.w}</b>: ${w.ru}. <i>${w.x}</i></li>`).join('')}</ul></div>` : '<div>No mistakes. Excellent!</div>'}
+      <div class="row" style="width:100%"><button class="btn primary" id="again">Play again</button></div></div>`;
+    $('#again').onclick = playSprint;
+  }
+  next();
+}
+
+if (week !== 'all' && !(week >= 1 && week <= 12)) week = 1;
+renderWeeks(); render();
+</script>
